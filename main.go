@@ -43,18 +43,24 @@ func main() {
 	router.Use(cors.New(corsConfig))
 
 	//Crear
-	router.POST("/users", handlers.CrearUsuarioHandler(db)) // Creacion de un Usuario
-	router.POST("/auth/login", handlers.LoginHandler(db))   // Endpoint para el Login
+	router.POST("/users", handlers.CrearUsuarioHandler(db))  // Creacion de un Usuario
+	router.POST("/auth/login", handlers.LoginHandler(db))    // Endpoint para el Login
+	router.POST("/pedidos", handlers.CrearPedidoHandler(db)) // Creacion de pedido
 
 	//Leer
-	router.GET("/users", handlers.ListarUsuariosHandler(db))     // Lectura de todos los Usuarios
-	router.GET("/users/:id", handlers.ObtenerUsuarioHandler(db)) // Lectura de un Usuario por ID
+	router.GET("/users", handlers.ListarUsuariosHandler(db))                                 // Lectura de todos los Usuarios
+	router.GET("/users/:id", handlers.ObtenerUsuarioHandler(db))                             // Lectura de un Usuario por ID
+	router.GET("/pedidos", handlers.ListarPedidosHandler(db))                                // Lectura de todos los pedidos
+	router.GET("/pedidos/:id", handlers.ObtenerPedidoHandler(db))                            // Lectura por el ID de un pedido
+	router.GET("/usuarios/:usuario_id/pedidos", handlers.ListarPedidosPorUsuarioHandler(db)) // Lectura de todos los pedidos de un vendedor
 
 	//Actualizar
-	router.PUT("/users/:id", handlers.ActualizarUsuarioHandler(db)) // Modificar un Uusario por ID
+	router.PUT("/users/:id", handlers.ActualizarUsuarioHandler(db))  // Modificar un Uusario por ID
+	router.PUT("/pedidos/:id", handlers.ActualizarPedidoHandler(db)) // Modificar un Pedido por ID
 
 	//Eliminar
-	router.DELETE("/users/:id", handlers.EliminarUsuarioHandler(db)) // Eliminar un Usuario por ID
+	router.DELETE("/users/:id", handlers.EliminarUsuarioHandler(db))  // Eliminar un Usuario por ID
+	router.DELETE("/pedidos/:id", handlers.EliminarPedidoHandler(db)) //Eliminar un Pedido por ID
 
 	router.Run(":8080")
 }

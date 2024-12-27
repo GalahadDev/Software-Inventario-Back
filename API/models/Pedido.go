@@ -15,6 +15,7 @@ type Pedido struct {
 	Fletero       *string   `gorm:"size:100;default:null"`
 	Monto         *float64  `gorm:"default:null"`
 	Estado        string    `gorm:"size:50;default:'No Entregado'"`
+	Precio        *float64  `gorm:"default:null"`
 
 	UsuarioID uint
 	Usuario   Usuario `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`

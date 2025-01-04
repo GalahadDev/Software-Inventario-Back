@@ -16,6 +16,10 @@ type Pedido struct {
 	Monto         *float64  `gorm:"default:null"`
 	Estado        string    `gorm:"size:50;default:'No Entregado'"`
 	Precio        *float64  `gorm:"default:null"`
+	Nombre        string    `gorm:"size:55"`
+	Observaciones string    `gorm:"size:255"`
+	Forma_Pago    string    `gorm:"size:55"`
+	Direccion     string    `gorm:"size:255"`
 
 	UsuarioID uint
 	Usuario   Usuario `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`

@@ -10,15 +10,18 @@ import (
 	"kings-house-back/API/models"
 )
 
-// Estructura del pedido
 type CrearPedidoRequest struct {
-	UsuarioID   uint     `json:"usuario_id" binding:"required"`
-	Descripcion string   `json:"descripcion" binding:"required"`
-	Imagen      string   `json:"imagen"`
-	Precio      *float64 `json:"precio"`
+	UsuarioID     uint     `json:"usuario_id" binding:"required"`
+	Descripcion   string   `json:"descripcion" binding:"required"`
+	Imagen        string   `json:"imagen"`
+	Precio        *float64 `json:"precio"`
+	Nombre        string   `json:"nombre" binding:"required"`
+	Observaciones string   `json:"observaciones"`
+	Forma_Pago    string   `json:"forma_pago"`
+	Direccion     string   `json:"direccion"`
 }
 
-// Creación de un pedido.
+// CrearPedidoHandler maneja la creación de un pedido.
 func CrearPedidoHandler(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req CrearPedidoRequest
@@ -33,9 +36,13 @@ func CrearPedidoHandler(db *gorm.DB) gin.HandlerFunc {
 			Imagen:        req.Imagen,
 			FechaCreacion: time.Now(),
 			Precio:        req.Precio,
-			Fletero:       nil,            // Por defecto en nil
-			Monto:         nil,            // Por defecto en nil
-			Estado:        "No Entregado", // Estado inicial
+			Fletero:       nil,
+			Monto:         nil,
+			Estado:        "No Entregado",
+			Nombre:        req.Nombre,
+			Observaciones: req.Observaciones,
+			Forma_Pago:    req.Forma_Pago,
+			Direccion:     req.Direccion,
 		}
 
 		if err := db.Create(&nuevoPedido).Error; err != nil {

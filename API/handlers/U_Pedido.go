@@ -11,12 +11,16 @@ import (
 )
 
 type ActualizarPedidoRequest struct {
-	Descripcion string   `json:"descripcion"`
-	Imagen      string   `json:"imagen"`
-	Fletero     *string  `json:"fletero"`
-	Monto       *float64 `json:"monto"`
-	Estado      string   `json:"estado"`
-	Precio      *float64 `json:"precio"`
+	Descripcion   string   `json:"descripcion"`
+	Imagen        string   `json:"imagen"`
+	Fletero       *string  `json:"fletero"`
+	Monto         *float64 `json:"monto"`
+	Estado        string   `json:"estado"`
+	Precio        *float64 `json:"precio"`
+	Nombre        string   `json:"nombre"`
+	Observaciones string   `json:"observaciones"`
+	Forma_Pago    string   `json:"forma_pago"`
+	Direccion     string   `json:"direccion"`
 }
 
 func ActualizarPedidoHandler(db *gorm.DB) gin.HandlerFunc {
@@ -44,7 +48,7 @@ func ActualizarPedidoHandler(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Actualizar los campos que vengan en el request
+		// Actualizar únicamente los campos que vengan con valor en el request
 		if req.Descripcion != "" {
 			pedido.Descripcion = req.Descripcion
 		}
@@ -62,6 +66,20 @@ func ActualizarPedidoHandler(db *gorm.DB) gin.HandlerFunc {
 		}
 		if req.Precio != nil {
 			pedido.Precio = req.Precio
+		}
+
+		// Campos nuevos
+		if req.Nombre != "" {
+			pedido.Nombre = req.Nombre
+		}
+		if req.Observaciones != "" {
+			pedido.Observaciones = req.Observaciones
+		}
+		if req.Forma_Pago != "" {
+			pedido.Forma_Pago = req.Forma_Pago
+		}
+		if req.Direccion != "" {
+			pedido.Direccion = req.Direccion
 		}
 
 		if err := db.Save(&pedido).Error; err != nil {

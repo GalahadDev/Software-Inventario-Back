@@ -23,7 +23,7 @@ func main() {
 		log.Fatalf("Error al conectarse a la BD: %v", err)
 	}
 
-	//db.AutoMigrate(&models.Usuario{}, &models.Pedido{})
+	//db.AutoMigrate(&models.Pedido{})
 
 	fmt.Print(config.DBURL())
 

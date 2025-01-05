@@ -46,12 +46,7 @@ func ObtenerPedidoHandler(db *gorm.DB) gin.HandlerFunc {
 
 func ListarPedidosPorUsuarioHandler(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		usuarioIDParam := c.Param("usuario_id")
-		usuarioID, err := strconv.Atoi(usuarioIDParam)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Usuario ID inválido"})
-			return
-		}
+		usuarioID := c.Param("usuario_id")
 
 		var pedidos []models.Pedido
 		if err := db.Where("usuario_id = ?", usuarioID).Find(&pedidos).Error; err != nil {

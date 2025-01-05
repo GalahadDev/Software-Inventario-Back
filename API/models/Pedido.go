@@ -21,7 +21,7 @@ type Pedido struct {
 	Forma_Pago    string    `gorm:"size:55"`
 	Direccion     string    `gorm:"size:255"`
 
-	UsuarioID uint
+	UsuarioID string
 	Usuario   Usuario `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 
 	CreatedAt time.Time

@@ -7,6 +7,7 @@ import (
 	"kings-house-back/API/handlers"
 
 	//"kings-house-back/API/models"
+
 	"log"
 
 	"time"
@@ -23,7 +24,7 @@ func main() {
 		log.Fatalf("Error al conectarse a la BD: %v", err)
 	}
 
-	//db.AutoMigrate(&models.Pedido{})
+	//db.AutoMigrate(&models.Usuario{}, &models.Pedido{})
 
 	fmt.Print(config.DBURL())
 

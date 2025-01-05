@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -25,15 +24,10 @@ func ListarUsuariosHandler(db *gorm.DB) gin.HandlerFunc {
 // Devuelve un usuario por su ID
 func ObtenerUsuarioHandler(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		idParam := c.Param("id")
-		id, err := strconv.Atoi(idParam)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "ID inválido"})
-			return
-		}
+		id := c.Param("id")
 
 		var usuario models.Usuario
-		if err := db.First(&usuario, id).Error; err != nil {
+		if err := db.First(&usuario, "id = ?", id).Error; err != nil {
 			if err == gorm.ErrRecordNotFound {
 				c.JSON(http.StatusNotFound, gin.H{"error": "Usuario no encontrado"})
 			} else {

@@ -57,8 +57,10 @@ func LoginHandler(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, gin.H{
-			"mensaje": "Inicio de sesión exitoso",
-			"token":   tokenString,
+			"mensaje":    "Inicio de sesión exitoso",
+			"token":      tokenString,
+			"usuario_id": usuario.ID,
+			"nombre":     usuario.Nombre,
 		})
 	}
 }

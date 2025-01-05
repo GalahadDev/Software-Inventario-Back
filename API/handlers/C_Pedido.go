@@ -11,7 +11,7 @@ import (
 )
 
 type CrearPedidoRequest struct {
-	UsuarioID     uint     `json:"usuario_id" binding:"required"`
+	UsuarioID     string   `json:"usuario_id" binding:"required"`
 	Descripcion   string   `json:"descripcion" binding:"required"`
 	Imagen        string   `json:"imagen"`
 	Precio        *float64 `json:"precio"`

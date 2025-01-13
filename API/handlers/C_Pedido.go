@@ -1,14 +1,16 @@
 package handlers
 
 import (
-	"log"
+	"fmt"
 	"net/http"
+	"path/filepath"
 	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
+	"kings-house-back/API/database"
 	"kings-house-back/API/models"
 )
 
@@ -36,29 +38,28 @@ func CrearPedidoHandler(db *gorm.DB) gin.HandlerFunc {
 			}
 		}
 
-		// 3. Manejar el archivo (imagen) si existe
-		file, err := c.FormFile("imagen")
-		var imagenRuta string
+		fileHeader, err := c.FormFile("imagen")
+		var publicURL string
+
 		if err == nil {
-			// Se subió un archivo con la clave "imagen"
-			// Ejemplo: guardar localmente en la carpeta "uploads"
-			// (En producción, lo normal es subir a S3 u otro servicio)
-			rutaArchivo := "./uploads/" + file.Filename
-			if err := c.SaveUploadedFile(file, rutaArchivo); err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al guardar la imagen"})
+			// El usuario envió un archivo
+			bucketName := "imagenes-pedidos"
+			// Ejemplo: pedidos/<timestamp>_<nombreArchivo>
+			filePath := fmt.Sprintf("pedidos/%d_%s", time.Now().Unix(), filepath.Base(fileHeader.Filename))
+
+			// 2. Subir el archivo a Supabase
+			publicURL, err = database.SubirAStorageSupabase(fileHeader, bucketName, filePath)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al subir a Supabase", "details": err.Error()})
 				return
 			}
-			imagenRuta = rutaArchivo
-		} else {
-			// Si no se mandó archivo o hay error, puedes ignorar o manejarlo
-			log.Printf("No se recibió archivo o error al recibir imagen: %v", err)
 		}
 
 		// 4. Crear el objeto Pedido
 		nuevoPedido := models.Pedido{
 			UsuarioID:     usuarioID,
 			Descripcion:   descripcion,
-			Imagen:        imagenRuta, // Guardamos la ruta donde está el archivo
+			Imagen:        publicURL,
 			FechaCreacion: time.Now(),
 			Precio:        precioFloat,
 			Fletero:       nil,

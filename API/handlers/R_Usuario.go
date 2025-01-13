@@ -39,3 +39,15 @@ func ObtenerUsuarioHandler(db *gorm.DB) gin.HandlerFunc {
 		c.JSON(http.StatusOK, usuario)
 	}
 }
+
+// Devuelve todos los usuarios que son vendedores
+func ListarVendedoresHandler(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var vendedores []models.Usuario
+		if err := db.Where("rol = ?", "vendedor").Find(&vendedores).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "No se pudo obtener la lista de vendedores"})
+			return
+		}
+		c.JSON(http.StatusOK, vendedores)
+	}
+}

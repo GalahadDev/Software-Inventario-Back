@@ -61,6 +61,7 @@ func LoginHandler(db *gorm.DB) gin.HandlerFunc {
 			"token":      tokenString,
 			"usuario_id": usuario.ID,
 			"nombre":     usuario.Nombre,
+			"rol":        usuario.Rol,
 		})
 	}
 }

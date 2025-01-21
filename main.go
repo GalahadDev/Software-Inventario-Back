@@ -26,9 +26,9 @@ func main() {
 	}
 
 	secretValue := os.Getenv("JWT_SECRET")
-	log.Println("DEBUG .env JWT_SECRET:", secretValue)
+	log.Println("DEBUG JWT_SECRET:", secretValue)
 
-	var secret = []byte(os.Getenv("secretValue"))
+	var secret = []byte(secretValue) // ahora sí asignas el contenido real
 
 	//db.AutoMigrate(&models.Usuario{}, &models.Pedido{})
 

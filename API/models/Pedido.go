@@ -22,9 +22,9 @@ type Pedido struct {
 	Direccion     string    `gorm:"size:255"`
 
 	UsuarioID string
-	Usuario   Usuario `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	Usuario   Usuario `json:"-" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt `gorm:"index"`
+	CreatedAt time.Time      `json:"-"`
+	UpdatedAt time.Time      `json:"-"`
+	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
 }

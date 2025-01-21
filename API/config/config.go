@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/joho/godotenv"
 )
@@ -12,14 +13,14 @@ func DBURL() string {
 	err := godotenv.Load(".env")
 
 	if err != nil {
-		log.Fatalf("Error al cargar el archivo .env")
+		log.Println("Advertencia: No se encontró el archivo .env o hubo un error al cargarlo. Se usarán las variables de entorno del sistema.")
 	}
 
-	DBHost := os.Getenv("host")
-	DBUser := os.Getenv("user")
-	DBPassword := os.Getenv("password")
-	DBPort := os.Getenv("port")
-	DBName := os.Getenv("dbname")
+	DBUser := strings.TrimSpace(os.Getenv("user"))
+	DBPassword := strings.TrimSpace(os.Getenv("password"))
+	DBHost := strings.TrimSpace(os.Getenv("host"))
+	DBPort := strings.TrimSpace(os.Getenv("port"))
+	DBName := strings.TrimSpace(os.Getenv("dbname"))
 
 	return fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable&statement_cache_mode=describe", DBUser, DBPassword, DBHost, DBPort, DBName)
 }

@@ -5,6 +5,8 @@ import (
 	"kings-house-back/API/config"
 	"kings-house-back/API/database"
 	"kings-house-back/API/handlers"
+	"kings-house-back/API/ws"
+
 	"os"
 
 	//"kings-house-back/API/models"
@@ -25,10 +27,19 @@ func main() {
 		log.Fatalf("Error al conectarse a la BD: %v", err)
 	}
 
+	hub := ws.NewHub()
+
+	//fuciona en local
+	/*secretValue := os.Getenv("JWT_SECRET")
+	log.Println("DEBUG .env JWT_SECRET:", secretValue)
+
+	var secret = []byte(os.Getenv("secretValue"))*/
+
+	//funciona en GCP
 	secretValue := os.Getenv("JWT_SECRET")
 	log.Println("DEBUG JWT_SECRET:", secretValue)
 
-	var secret = []byte(secretValue) // ahora sí asignas el contenido real
+	var secret = []byte(secretValue)
 
 	//db.AutoMigrate(&models.Usuario{}, &models.Pedido{})
 
@@ -49,8 +60,8 @@ func main() {
 
 	//Crear
 	router.POST("/auth/login", handlers.LoginHandler(db))
-	router.POST("/users", handlers.AuthMiddleware(secret), handlers.RoleMiddleware("administrador", "gestor"), handlers.CrearUsuarioHandler(db))              // Creacion de un Usuario                                                                                                   // Endpoint para el Login
-	router.POST("/pedidos", handlers.AuthMiddleware(secret), handlers.RoleMiddleware("administrador", "gestor", "vendedor"), handlers.CrearPedidoHandler(db)) // Creacion de pedido
+	router.POST("/users", handlers.AuthMiddleware(secret), handlers.RoleMiddleware("administrador", "gestor"), handlers.CrearUsuarioHandler(db))                   // Creacion de un Usuario                                                                                                   // Endpoint para el Login
+	router.POST("/pedidos", handlers.AuthMiddleware(secret), handlers.RoleMiddleware("administrador", "gestor", "vendedor"), handlers.CrearPedidoHandler(db, hub)) // Creacion de pedido
 
 	//Leer
 	router.GET("/users", handlers.AuthMiddleware(secret), handlers.RoleMiddleware("administrador"), handlers.ListarUsuariosHandler(db))                                                       // Lectura de todos los Usuarios
@@ -67,6 +78,9 @@ func main() {
 	//Eliminar
 	router.DELETE("/users/:id", handlers.AuthMiddleware(secret), handlers.RoleMiddleware("administrador"), handlers.EliminarUsuarioHandler(db))            // Eliminar un Usuario por ID
 	router.DELETE("/pedidos/:id", handlers.AuthMiddleware(secret), handlers.RoleMiddleware("administrador", "gestor"), handlers.EliminarPedidoHandler(db)) //Eliminar un Pedido por ID
+
+	//WebSocket
+	router.GET("/ws", handlers.AuthMiddleware(secret), handlers.RoleMiddleware("administrador", "gestor"), handlers.WSHandler(hub))
 
 	router.Run(":8080")
 }

@@ -12,13 +12,14 @@ import (
 
 	"kings-house-back/API/database"
 	"kings-house-back/API/models"
+	"kings-house-back/API/ws"
 )
 
 // CrearPedidoHandler maneja la creación de un pedido.
-func CrearPedidoHandler(db *gorm.DB) gin.HandlerFunc {
+func CrearPedidoHandler(db *gorm.DB, hub *ws.Hub) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		// Leer los campos de form-data
+		// 1. Leer los campos de form-data
 		usuarioID := c.PostForm("usuario_id")
 		descripcion := c.PostForm("descripcion")
 		nombre := c.PostForm("nombre")
@@ -26,7 +27,7 @@ func CrearPedidoHandler(db *gorm.DB) gin.HandlerFunc {
 		formaPago := c.PostForm("forma_pago")
 		direccion := c.PostForm("direccion")
 
-		// Parsear el precio
+		// 2. Parsear el precio (si viene)
 		precioStr := c.PostForm("precio")
 		var precioFloat *float64
 		if precioStr != "" {
@@ -38,16 +39,14 @@ func CrearPedidoHandler(db *gorm.DB) gin.HandlerFunc {
 			}
 		}
 
+		// 3. Manejo de la imagen (si viene)
 		fileHeader, err := c.FormFile("imagen")
 		var publicURL string
-
 		if err == nil {
 			// El usuario envió un archivo
 			bucketName := "imagenes-pedidos"
-			// Ejemplo: pedidos/<timestamp>_<nombreArchivo>
 			filePath := fmt.Sprintf("pedidos/%d_%s", time.Now().Unix(), filepath.Base(fileHeader.Filename))
 
-			// 2. Subir el archivo a Supabase
 			publicURL, err = database.SubirAStorageSupabase(fileHeader, bucketName, filePath)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al subir a Supabase", "details": err.Error()})
@@ -65,7 +64,6 @@ func CrearPedidoHandler(db *gorm.DB) gin.HandlerFunc {
 			Fletero:       nil,
 			Monto:         nil,
 			Estado:        "No Entregado",
-
 			Nombre:        nombre,
 			Observaciones: observaciones,
 			Forma_Pago:    formaPago,
@@ -78,7 +76,23 @@ func CrearPedidoHandler(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		// 6. Respuesta exitosa
+		// 6. Buscar el usuario (vendedor) en la BD para obtener su nombre
+		var usuarioCreador models.Usuario
+		if err := db.First(&usuarioCreador, "id = ?", usuarioID).Error; err != nil {
+
+			fmt.Printf("Usuario con ID %s no encontrado o error: %v\n", usuarioID, err)
+		}
+
+		// 7. Construir el mensaje con el nombre del vendedor (si existe)
+		mensaje := "Se ha creado un nuevo pedido!"
+		if usuarioCreador.ID != "" {
+			mensaje = fmt.Sprintf("%s ha creado un nuevo pedido!", usuarioCreador.Nombre)
+		}
+
+		// 8. Enviar notificación a Admin/Gestor
+		hub.BroadcastMessage(mensaje, "administrador", "gestor")
+
+		// 9. Respuesta exitosa
 		c.JSON(http.StatusOK, gin.H{
 			"mensaje":    "Pedido creado exitosamente",
 			"pedido_id":  nuevoPedido.ID,

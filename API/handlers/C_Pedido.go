@@ -86,7 +86,7 @@ func CrearPedidoHandler(db *gorm.DB, hub *ws.Hub) gin.HandlerFunc {
 		// 7. Construir el mensaje con el nombre del vendedor (si existe)
 		mensaje := "Se ha creado un nuevo pedido!"
 		if usuarioCreador.ID != "" {
-			mensaje = fmt.Sprintf("%s ha creado un nuevo pedido!", usuarioCreador.Nombre)
+			mensaje = fmt.Sprintf("%s (%s) ha creado un nuevo pedido!", usuarioCreador.Nombre, usuarioCreador.ID)
 		}
 
 		// 8. Enviar notificación a Admin/Gestor

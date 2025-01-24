@@ -70,6 +70,7 @@ func main() {
 	router.GET("/pedidos/:id", handlers.AuthMiddleware(secret), handlers.RoleMiddleware("administrador", "gestor", "vendedor"), handlers.ObtenerPedidoHandler(db))                            // Lectura por el ID de un pedido
 	router.GET("/usuarios/:usuario_id/pedidos", handlers.AuthMiddleware(secret), handlers.RoleMiddleware("administrador", "gestor", "vendedor"), handlers.ListarPedidosPorUsuarioHandler(db)) // Lectura de todos los pedidos de un vendedor
 	router.GET("/users/vendedores", handlers.AuthMiddleware(secret), handlers.RoleMiddleware("administrador", "gestor"), handlers.ListarVendedoresHandler(db))                                // Lectura de todos los vendedores
+	router.GET("/reportes/vendedores/:vendedor_id/montos", handlers.AuthMiddleware(secret), handlers.RoleMiddleware("administrador", "gestor"), handlers.SumarMontosPorVendedor(db))          //Lectura de comision de un vendedor
 
 	//Actualizar
 	router.PUT("/users/:id", handlers.AuthMiddleware(secret), handlers.RoleMiddleware("administrador"), handlers.ActualizarUsuarioHandler(db))            // Modificar un Usuario por ID
@@ -80,7 +81,7 @@ func main() {
 	router.DELETE("/pedidos/:id", handlers.AuthMiddleware(secret), handlers.RoleMiddleware("administrador", "gestor"), handlers.EliminarPedidoHandler(db)) //Eliminar un Pedido por ID
 
 	//WebSocket
-	router.GET("/ws", handlers.AuthMiddleware(secret), handlers.RoleMiddleware("administrador", "gestor"), handlers.WSHandler(hub))
+	router.GET("/ws", handlers.AuthMiddlewareQuery(secret), handlers.RoleMiddleware("administrador", "gestor"), handlers.WSHandler(hub))
 
 	router.Run(":8080")
 }

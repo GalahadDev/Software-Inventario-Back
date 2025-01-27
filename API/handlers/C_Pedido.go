@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -45,8 +46,18 @@ func CrearPedidoHandler(db *gorm.DB, hub *ws.Hub) gin.HandlerFunc {
 		if err == nil {
 			// El usuario envió un archivo
 			bucketName := "imagenes-pedidos"
-			filePath := fmt.Sprintf("pedidos/%d_%s", time.Now().Unix(), filepath.Base(fileHeader.Filename))
 
+			// Obtener el nombre base del archivo
+			rawFileName := filepath.Base(fileHeader.Filename)
+
+			// Reemplazar espacios en el nombre
+			cleanFileName := strings.ReplaceAll(rawFileName, " ", "_")
+			// Opcional: podrías hacer más limpieza (ej. quitar acentos o caracteres especiales)
+
+			// Construir la ruta final: pedidos/<timestamp>_<nombreLimpio>
+			filePath := fmt.Sprintf("pedidos/%d_%s", time.Now().Unix(), cleanFileName)
+
+			// Subir a Supabase con el nombre limpio
 			publicURL, err = database.SubirAStorageSupabase(fileHeader, bucketName, filePath)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al subir a Supabase", "details": err.Error()})
@@ -79,7 +90,6 @@ func CrearPedidoHandler(db *gorm.DB, hub *ws.Hub) gin.HandlerFunc {
 		// 6. Buscar el usuario (vendedor) en la BD para obtener su nombre
 		var usuarioCreador models.Usuario
 		if err := db.First(&usuarioCreador, "id = ?", usuarioID).Error; err != nil {
-
 			fmt.Printf("Usuario con ID %s no encontrado o error: %v\n", usuarioID, err)
 		}
 

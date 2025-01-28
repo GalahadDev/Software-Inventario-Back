@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"fmt"
+	"log"
 	"net/http"
+	"time"
 
 	"kings-house-back/API/ws"
 
@@ -13,14 +15,21 @@ import (
 
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
-		// Asegúrate de permitir orígenes adecuados o filtrar por CORS
+		// Ajusta según tu política de orígenes
 		return true
 	},
 }
 
+// Ajustes de heartbeat
+const (
+	pongWait   = 60 * time.Second    // Cuánto esperamos sin recibir un pong
+	pingPeriod = (pongWait * 9) / 10 // Cada cuánto enviamos ping
+)
+
+// WSHandler maneja la conexión WebSocket y configura ping/pong
 func WSHandler(hub *ws.Hub) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Revisar si hay claims en el contexto (AuthMiddleware)
+		// 1. Verificar claims en el contexto (AuthMiddleware)
 		claimsVal, existe := c.Get("claims")
 		if !existe {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "No se encontraron claims"})
@@ -37,28 +46,56 @@ func WSHandler(hub *ws.Hub) gin.HandlerFunc {
 			return
 		}
 
-		// "upgrade" la conexión HTTP a WebSocket
+		// 2. Hacer upgrade a WebSocket
 		conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 		if err != nil {
 			fmt.Println("Error al convertir a WebSocket:", err)
 			return
 		}
 
+		// 3. Configurar deadlines y pong handler
+		conn.SetReadDeadline(time.Now().Add(pongWait))
+		conn.SetPongHandler(func(appData string) error {
+			// Al recibir PONG, renovamos el ReadDeadline
+			conn.SetReadDeadline(time.Now().Add(pongWait))
+			return nil
+		})
+
+		// 4. Iniciar goroutine que envía pings periódicos
+		go func() {
+			ticker := time.NewTicker(pingPeriod)
+			defer ticker.Stop()
+
+			for {
+				<-ticker.C
+				// Enviar ping
+				if err := conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+					log.Println("Error al enviar ping:", err)
+					conn.Close()
+					return
+				}
+			}
+		}()
+
+		// 5. Registrar el cliente en tu hub
 		client := &ws.Client{
 			Conn: conn,
 			Rol:  rol,
 		}
 		hub.RegisterClient(client)
 
-		// Leer en un loop hasta que se cierre
+		// 6. Bucle para leer mensajes desde el cliente
 		for {
 			_, _, err := conn.ReadMessage()
 			if err != nil {
-				// Cuando se produce un error, desconectamos
+				// Cuando ocurre un error (desconexión, timeout, etc.), desregistramos
 				hub.UnregisterClient(client)
 				break
 			}
-			// Puedes manejar mensajes entrantes si es necesario
+			// Si deseas, puedes renovar Deadline aquí también:
+			conn.SetReadDeadline(time.Now().Add(pongWait))
+
+			// Manejar mensajes entrantes si es necesario...
 		}
 	}
 }

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json" // Importante para serializar a JSON
 	"fmt"
 	"net/http"
 	"path/filepath"
@@ -16,11 +17,17 @@ import (
 	"kings-house-back/API/ws"
 )
 
-// CrearPedidoHandler maneja la creación de un pedido.
+// Estructura para notificar un nuevo pedido
+type NotificacionPedido struct {
+	Tipo    string        `json:"tipo"`
+	Pedido  models.Pedido `json:"pedido"` // los campos del pedido
+	Creador string        `json:"creador,omitempty"`
+}
+
 func CrearPedidoHandler(db *gorm.DB, hub *ws.Hub) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		// 1. Leer los campos de form-data
+		// 1. Leer campos de form-data
 		usuarioID := c.PostForm("usuario_id")
 		descripcion := c.PostForm("descripcion")
 		nombre := c.PostForm("nombre")
@@ -28,7 +35,7 @@ func CrearPedidoHandler(db *gorm.DB, hub *ws.Hub) gin.HandlerFunc {
 		formaPago := c.PostForm("forma_pago")
 		direccion := c.PostForm("direccion")
 
-		// 2. Parsear el precio (si viene)
+		// 2. Parsear precio
 		precioStr := c.PostForm("precio")
 		var precioFloat *float64
 		if precioStr != "" {
@@ -40,24 +47,15 @@ func CrearPedidoHandler(db *gorm.DB, hub *ws.Hub) gin.HandlerFunc {
 			}
 		}
 
-		// 3. Manejo de la imagen (si viene)
+		// 3. Manejo de imagen si existe
 		fileHeader, err := c.FormFile("imagen")
 		var publicURL string
 		if err == nil {
-			// El usuario envió un archivo
 			bucketName := "imagenes-pedidos"
-
-			// Obtener el nombre base del archivo
 			rawFileName := filepath.Base(fileHeader.Filename)
-
-			// Reemplazar espacios en el nombre
 			cleanFileName := strings.ReplaceAll(rawFileName, " ", "_")
-			// Opcional: podrías hacer más limpieza (ej. quitar acentos o caracteres especiales)
-
-			// Construir la ruta final: pedidos/<timestamp>_<nombreLimpio>
 			filePath := fmt.Sprintf("pedidos/%d_%s", time.Now().Unix(), cleanFileName)
 
-			// Subir a Supabase con el nombre limpio
 			publicURL, err = database.SubirAStorageSupabase(fileHeader, bucketName, filePath)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al subir a Supabase", "details": err.Error()})
@@ -65,7 +63,7 @@ func CrearPedidoHandler(db *gorm.DB, hub *ws.Hub) gin.HandlerFunc {
 			}
 		}
 
-		// 4. Crear el objeto Pedido
+		// 4. Crear objeto Pedido
 		nuevoPedido := models.Pedido{
 			UsuarioID:     usuarioID,
 			Descripcion:   descripcion,
@@ -81,28 +79,36 @@ func CrearPedidoHandler(db *gorm.DB, hub *ws.Hub) gin.HandlerFunc {
 			Direccion:     direccion,
 		}
 
-		// 5. Guardar en la base de datos
+		// 5. Guardar en la BD
 		if err := db.Create(&nuevoPedido).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "No se pudo crear el pedido"})
 			return
 		}
 
-		// 6. Buscar el usuario (vendedor) en la BD para obtener su nombre
+		// 6. Buscar usuario para obtener nombre
 		var usuarioCreador models.Usuario
 		if err := db.First(&usuarioCreador, "id = ?", usuarioID).Error; err != nil {
 			fmt.Printf("Usuario con ID %s no encontrado o error: %v\n", usuarioID, err)
 		}
 
-		// 7. Construir el mensaje con el nombre del vendedor (si existe)
-		mensaje := "Se ha creado un nuevo pedido!"
-		if usuarioCreador.ID != "" {
-			mensaje = fmt.Sprintf("%s (%s) ha creado un nuevo pedido!", usuarioCreador.Nombre, usuarioCreador.ID)
+		creador := usuarioCreador.Nombre
+		if creador == "" {
+			creador = "Vendedor Desconocido"
 		}
 
-		// 8. Enviar notificación a Admin/Gestor
-		hub.BroadcastMessage(mensaje, "administrador", "gestor")
+		// 7. Armar notificación como JSON
+		notif := NotificacionPedido{
+			Tipo:    "NUEVO_PEDIDO",
+			Pedido:  nuevoPedido,
+			Creador: creador,
+		}
 
-		// 9. Respuesta exitosa
+		notifBytes, _ := json.Marshal(notif) // serializar a []byte
+
+		// 8. Enviar a admin/gestor
+		hub.BroadcastMessage(string(notifBytes), "administrador", "gestor")
+
+		// 9. Respuesta HTTP exitosa
 		c.JSON(http.StatusOK, gin.H{
 			"mensaje":    "Pedido creado exitosamente",
 			"pedido_id":  nuevoPedido.ID,

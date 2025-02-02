@@ -5,15 +5,14 @@ import (
 	"net/http"
 	"strconv"
 
+	"kings-house-back/API/models"
+
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-
-	"kings-house-back/API/models"
 )
 
 func ActualizarPedidoHandler(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-
 		idParam := c.Param("id")
 		id, err := strconv.Atoi(idParam)
 		if err != nil {
@@ -21,19 +20,19 @@ func ActualizarPedidoHandler(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		// 2. Leer campos de form-data (opcional)
+		// Leer campos de form-data
 		descripcion := c.PostForm("descripcion")
 		fletero := c.PostForm("fletero")
 		montoStr := c.PostForm("monto")
 		estado := c.PostForm("estado")
 		precioStr := c.PostForm("precio")
-
 		nombre := c.PostForm("nombre")
 		observaciones := c.PostForm("observaciones")
 		formaPago := c.PostForm("forma_pago")
 		direccion := c.PostForm("direccion")
+		atendidoStr := c.PostForm("atendido")
 
-		// 3. Parsear monto y precio
+		// Parsear monto y precio
 		var montoFloat *float64
 		if montoStr != "" {
 			if m, err := strconv.ParseFloat(montoStr, 64); err == nil {
@@ -54,7 +53,7 @@ func ActualizarPedidoHandler(db *gorm.DB) gin.HandlerFunc {
 			}
 		}
 
-		// 4. Manejo de la imagen (opcional)
+		// Manejo imagen (opcional)
 		file, errFile := c.FormFile("imagen")
 		var imagenRuta string
 		if errFile == nil {
@@ -68,7 +67,7 @@ func ActualizarPedidoHandler(db *gorm.DB) gin.HandlerFunc {
 			log.Printf("No se recibió nueva imagen o error al recibir imagen: %v", errFile)
 		}
 
-		// 5. Buscar el pedido existente
+		// Buscar el pedido existente
 		var pedido models.Pedido
 		if err := db.First(&pedido, id).Error; err != nil {
 			if err == gorm.ErrRecordNotFound {
@@ -79,7 +78,7 @@ func ActualizarPedidoHandler(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		// 6. Actualizar campos que no sean vacíos
+		// Actualizar campos
 		if descripcion != "" {
 			pedido.Descripcion = descripcion
 		}
@@ -110,8 +109,10 @@ func ActualizarPedidoHandler(db *gorm.DB) gin.HandlerFunc {
 		if direccion != "" {
 			pedido.Direccion = direccion
 		}
+		if atendidoStr != "" {
+			pedido.Atendido = true
+		}
 
-		// 7. Guardar cambios en la BD
 		if err := db.Save(&pedido).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "No se pudo actualizar el pedido"})
 			return

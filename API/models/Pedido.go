@@ -20,6 +20,7 @@ type Pedido struct {
 	Observaciones string    `gorm:"size:255"`
 	Forma_Pago    string    `gorm:"size:55"`
 	Direccion     string    `gorm:"size:255"`
+	Atendido      bool      `gorm:"default:false"`
 
 	UsuarioID string
 	Usuario   Usuario `json:"-" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`

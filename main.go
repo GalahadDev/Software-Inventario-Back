@@ -47,13 +47,14 @@ func main() {
 
 	// Configurar CORS
 	corsConfig := cors.Config{
-		AllowAllOrigins:  true,
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
-		ExposeHeaders:    []string{"Content-Length"},
-		AllowCredentials: true,
-		MaxAge:           12 * time.Hour,
+   		AllowOrigins:     []string{"https://kings-bed-sm.onrender.com"},
+   		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+    		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+    		ExposeHeaders:    []string{"Content-Length"},
+    		AllowCredentials: true,
+    		MaxAge:           12 * time.Hour,
 	}
+
 
 	router := gin.Default()
 	router.Use(cors.New(corsConfig)) //

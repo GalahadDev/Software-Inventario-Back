@@ -46,13 +46,23 @@ func main() {
 	fmt.Print(config.DBURL())
 
 	// Configurar CORS
-	corsConfig := cors.Config{
+	/*corsConfig := cors.Config{
    		AllowOrigins:     []string{"https://kings-bed-sm.onrender.com"},
    		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
     		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
     		ExposeHeaders:    []string{"Content-Length"},
     		AllowCredentials: true,
     		MaxAge:           12 * time.Hour,
+	}*/
+
+	// Configurar CORS
+	corsConfig := cors.Config{
+		AllowAllOrigins:  true,
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
 	}
 
 

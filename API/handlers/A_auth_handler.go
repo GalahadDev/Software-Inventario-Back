@@ -18,7 +18,7 @@ var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
 
 type Credenciales struct {
 	Email      string `json:"email" binding:"required"`
-	Contrasena string `json:"contrasena" binding:"required"`
+	Contrasena string `json:"contrasena"`
 }
 
 // LoginHandler procesa el login y genera un token JWT
@@ -30,24 +30,45 @@ func LoginHandler(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
+		// 1. Buscar el usuario (sea admin, gestor, o vendedor)
 		var usuario models.Usuario
-		// Buscar usuario por Email
 		if err := db.Where("email = ?", creds.Email).First(&usuario).Error; err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Credenciales inválidas"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Usuario no encontrado"})
 			return
 		}
 
-		// Verificar contraseña hasheada
-		if err := bcrypt.CompareHashAndPassword([]byte(usuario.Contrasena), []byte(creds.Contrasena)); err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Credenciales inválidas"})
+		// 2. Verificar rol
+		if usuario.Rol == "administrador" || usuario.Rol == "gestor" {
+			// Admin/Gestor: se requiere contraseña
+			if creds.Contrasena == "" {
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "Contraseña requerida para este rol"})
+				return
+			}
+			// Comparar hash
+			if err := bcrypt.CompareHashAndPassword(
+				[]byte(usuario.Contrasena),
+				[]byte(creds.Contrasena),
+			); err != nil {
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "Credenciales inválidas"})
+				return
+			}
+
+		} else if usuario.Rol == "vendedor" {
+			// Vendedor: no requiere password => si no mandó nada, no pasa nada
+			if creds.Contrasena != "" {
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "Rol vendedor no necesita contraseña"})
+				return
+			}
+		} else {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Rol inválido"})
 			return
 		}
 
-		//Creacion un token JWT
+		// 3. Crear token JWT
 		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 			"usuario_id": usuario.ID,
 			"rol":        usuario.Rol,
-			"exp":        time.Now().Add(time.Hour * 24).Unix(), // 1 día de validez
+			"exp":        time.Now().Add(time.Hour * 24).Unix(),
 		})
 
 		tokenString, err := token.SignedString(jwtSecret)
@@ -56,6 +77,7 @@ func LoginHandler(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
+		// 4. Responder
 		c.JSON(http.StatusOK, gin.H{
 			"mensaje":    "Inicio de sesión exitoso",
 			"token":      tokenString,

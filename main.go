@@ -76,11 +76,11 @@ func main() {
 
 	//Actualizar
 	router.PUT("/users/:id", handlers.AuthMiddleware(secret), handlers.RoleMiddleware("administrador"), handlers.ActualizarUsuarioHandler(db))            // Modificar un Usuario por ID
-	router.PUT("/pedidos/:id", handlers.AuthMiddleware(secret), handlers.RoleMiddleware("administrador", "gestor"), handlers.ActualizarPedidoHandler(db)) // Modificar un Pedido por ID
+	router.PUT("/pedidos/:id", handlers.AuthMiddleware(secret), handlers.RoleMiddleware("administrador", "gestor"), handlers.ActualizarPedidoHandler(db, hub)) // Modificar un Pedido por ID
 
 	//Eliminar
 	router.DELETE("/users/:id", handlers.AuthMiddleware(secret), handlers.RoleMiddleware("administrador"), handlers.EliminarUsuarioHandler(db))            // Eliminar un Usuario por ID
-	router.DELETE("/pedidos/:id", handlers.AuthMiddleware(secret), handlers.RoleMiddleware("administrador", "gestor"), handlers.EliminarPedidoHandler(db, hub)) //Eliminar un Pedido por ID
+	router.DELETE("/pedidos/:id", handlers.AuthMiddleware(secret), handlers.RoleMiddleware("administrador", "gestor"), handlers.EliminarPedidoHandler(db)) //Eliminar un Pedido por ID
 
 	//WebSocket
 	router.GET("/ws", handlers.AuthMiddlewareQuery(secret), handlers.RoleMiddleware("administrador", "gestor"), handlers.WSHandler(hub))

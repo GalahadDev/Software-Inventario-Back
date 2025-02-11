@@ -9,7 +9,6 @@ import (
 
 	"os"
 
-	//"kings-house-back/API/models"
 
 	"log"
 
@@ -29,19 +28,11 @@ func main() {
 
 	hub := ws.NewHub()
 
-	//fuciona en local
-	/*secretValue := os.Getenv("JWT_SECRET")
-	log.Println("DEBUG .env JWT_SECRET:", secretValue)
-
-	var secret = []byte(os.Getenv("secretValue"))*/
-
-	//funciona en GCP
+	//Configuración variables de entorno
 	secretValue := os.Getenv("JWT_SECRET")
 	log.Println("DEBUG JWT_SECRET:", secretValue)
 
 	var secret = []byte(secretValue)
-
-	//db.AutoMigrate(&models.Usuario{}, &models.Pedido{})
 
 	fmt.Print(config.DBURL())
 

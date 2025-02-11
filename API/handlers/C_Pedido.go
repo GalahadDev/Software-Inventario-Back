@@ -34,7 +34,7 @@ func CrearPedidoHandler(db *gorm.DB, hub *ws.Hub) gin.HandlerFunc {
 		observaciones := c.PostForm("observaciones")
 		formaPago := c.PostForm("forma_pago")
 		direccion := c.PostForm("direccion")
-		numerotlf := c.PostForm("numero_tlf")
+		numerotlf := c.PostForm("nro_tlf")
 
 		// 2. Parsear precio
 		precioStr := c.PostForm("precio")

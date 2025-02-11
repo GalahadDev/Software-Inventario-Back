@@ -80,7 +80,7 @@ func main() {
 
 	//Eliminar
 	router.DELETE("/users/:id", handlers.AuthMiddleware(secret), handlers.RoleMiddleware("administrador"), handlers.EliminarUsuarioHandler(db))            // Eliminar un Usuario por ID
-	router.DELETE("/pedidos/:id", handlers.AuthMiddleware(secret), handlers.RoleMiddleware("administrador", "gestor"), handlers.EliminarPedidoHandler(db)) //Eliminar un Pedido por ID
+	router.DELETE("/pedidos/:id", handlers.AuthMiddleware(secret), handlers.RoleMiddleware("administrador", "gestor"), handlers.EliminarPedidoHandler(db, hub)) //Eliminar un Pedido por ID
 
 	//WebSocket
 	router.GET("/ws", handlers.AuthMiddlewareQuery(secret), handlers.RoleMiddleware("administrador", "gestor"), handlers.WSHandler(hub))

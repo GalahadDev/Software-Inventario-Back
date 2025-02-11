@@ -20,10 +20,13 @@ type Pedido struct {
 	Observaciones string    `gorm:"size:255"`
 	Forma_Pago    string    `gorm:"size:55"`
 	Direccion     string    `gorm:"size:255"`
+	Nro_Tlf       string    `gorm:"size:12"`
+	Pagado        string    `gorm:"size:9;default:'No Pagado'"`
 	Atendido      bool      `gorm:"default:false"`
 
-	UsuarioID string
-	Usuario   Usuario `json:"-" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	Nombre_Vendedor string
+	UsuarioID       string
+	Usuario         Usuario `json:"-" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 
 	CreatedAt time.Time      `json:"-"`
 	UpdatedAt time.Time      `json:"-"`

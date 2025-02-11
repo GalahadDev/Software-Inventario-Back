@@ -34,6 +34,7 @@ func CrearPedidoHandler(db *gorm.DB, hub *ws.Hub) gin.HandlerFunc {
 		observaciones := c.PostForm("observaciones")
 		formaPago := c.PostForm("forma_pago")
 		direccion := c.PostForm("direccion")
+		numerotlf := c.PostForm("numero_tlf")
 
 		// 2. Parsear precio
 		precioStr := c.PostForm("precio")
@@ -63,7 +64,7 @@ func CrearPedidoHandler(db *gorm.DB, hub *ws.Hub) gin.HandlerFunc {
 			}
 		}
 
-		// 4. Crear objeto Pedido
+		// 4. Construir objeto Pedido (aún no guardamos)
 		nuevoPedido := models.Pedido{
 			UsuarioID:     usuarioID,
 			Descripcion:   descripcion,
@@ -77,15 +78,12 @@ func CrearPedidoHandler(db *gorm.DB, hub *ws.Hub) gin.HandlerFunc {
 			Observaciones: observaciones,
 			Forma_Pago:    formaPago,
 			Direccion:     direccion,
+			Nro_Tlf:       numerotlf,
+			Pagado:        "No Pagado",
+			// Nombre_Vendedor se asignará después de obtener el nombre real
 		}
 
-		// 5. Guardar en la BD
-		if err := db.Create(&nuevoPedido).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "No se pudo crear el pedido"})
-			return
-		}
-
-		// 6. Buscar usuario para obtener nombre
+		// 5. Obtener el usuario para saber su nombre
 		var usuarioCreador models.Usuario
 		if err := db.First(&usuarioCreador, "id = ?", usuarioID).Error; err != nil {
 			fmt.Printf("Usuario con ID %s no encontrado o error: %v\n", usuarioID, err)
@@ -96,19 +94,28 @@ func CrearPedidoHandler(db *gorm.DB, hub *ws.Hub) gin.HandlerFunc {
 			creador = "Vendedor Desconocido"
 		}
 
-		// 7. Armar notificación como JSON
+		// 6. Asignar Nombre_Vendedor con el nombre del usuario (vendedor)
+		nuevoPedido.Nombre_Vendedor = creador
+
+		// 7. Guardar en la BD
+		if err := db.Create(&nuevoPedido).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "No se pudo crear el pedido"})
+			return
+		}
+
+		// 8. Armar notificación como JSON
 		notif := NotificacionPedido{
 			Tipo:    "NUEVO_PEDIDO",
 			Pedido:  nuevoPedido,
-			Creador: creador,
+			Creador: creador, // lo mismo que Nombre_Vendedor, por si el front lo usa
 		}
 
-		notifBytes, _ := json.Marshal(notif) // serializar a []byte
+		notifBytes, _ := json.Marshal(notif)
 
-		// 8. Enviar a admin/gestor
+		// 9. Enviar a admin/gestor
 		hub.BroadcastMessage(string(notifBytes), "administrador", "gestor")
 
-		// 9. Respuesta HTTP exitosa
+		// 10. Respuesta HTTP exitosa
 		c.JSON(http.StatusOK, gin.H{
 			"mensaje":    "Pedido creado exitosamente",
 			"pedido_id":  nuevoPedido.ID,

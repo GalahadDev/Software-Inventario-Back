@@ -1,17 +1,19 @@
 package handlers
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"strconv"
 
-	"kings-house-back/API/models"
-
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
+
+	"kings-house-back/API/models"
+	"kings-house-back/API/ws"
 )
 
-func ActualizarPedidoHandler(db *gorm.DB) gin.HandlerFunc {
+func ActualizarPedidoHandler(db *gorm.DB, hub *ws.Hub) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		idParam := c.Param("id")
 		id, err := strconv.Atoi(idParam)
@@ -30,6 +32,8 @@ func ActualizarPedidoHandler(db *gorm.DB) gin.HandlerFunc {
 		observaciones := c.PostForm("observaciones")
 		formaPago := c.PostForm("forma_pago")
 		direccion := c.PostForm("direccion")
+		numerotlf := c.PostForm("numero_tlf")
+		pagado := c.PostForm("pagado")
 		atendidoStr := c.PostForm("atendido")
 
 		// Parsear monto y precio
@@ -109,14 +113,30 @@ func ActualizarPedidoHandler(db *gorm.DB) gin.HandlerFunc {
 		if direccion != "" {
 			pedido.Direccion = direccion
 		}
+		if numerotlf != "" {
+			pedido.Nro_Tlf = numerotlf
+		}
+		if pagado != "" {
+			pedido.Pagado = pagado
+		}
 		if atendidoStr != "" {
 			pedido.Atendido = true
 		}
 
+		// Guardar en la BD
 		if err := db.Save(&pedido).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "No se pudo actualizar el pedido"})
 			return
 		}
+
+		// ---- ENVIAR NOTIFICACIÓN WS: "PEDIDO_ACTUALIZADO" ----
+		notif := NotificacionPedido{
+			Tipo:   "PEDIDO_ACTUALIZADO",
+			Pedido: pedido,
+		}
+		notifBytes, _ := json.Marshal(notif)
+		// Avisamos a admin/gestor (o a quien quieras)
+		hub.BroadcastMessage(string(notifBytes), "administrador", "gestor")
 
 		c.JSON(http.StatusOK, gin.H{"mensaje": "Pedido actualizado correctamente"})
 	}

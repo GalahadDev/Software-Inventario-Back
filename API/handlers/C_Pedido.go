@@ -73,7 +73,7 @@ func CrearPedidoHandler(db *gorm.DB, hub *ws.Hub) gin.HandlerFunc {
 			Precio:        precioFloat,
 			Fletero:       nil,
 			Monto:         nil,
-			Estado:        "No Entregado",
+			Estado:        "Pendiente",
 			Nombre:        nombre,
 			Observaciones: observaciones,
 			Forma_Pago:    formaPago,

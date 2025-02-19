@@ -35,8 +35,11 @@ func CrearPedidoHandler(db *gorm.DB, hub *ws.Hub) gin.HandlerFunc {
 		formaPago := c.PostForm("forma_pago")
 		direccion := c.PostForm("direccion")
 		numerotlf := c.PostForm("nro_tlf")
+		tela := c.PostForm("tela")
+		color := c.PostForm("color")
+		subVendedor := c.PostForm("sub_vendedor")
 
-		// 2. Parsear precio
+		// Parsear precio
 		precioStr := c.PostForm("precio")
 		var precioFloat *float64
 		if precioStr != "" {
@@ -48,7 +51,19 @@ func CrearPedidoHandler(db *gorm.DB, hub *ws.Hub) gin.HandlerFunc {
 			}
 		}
 
-		// 3. Manejo de imagen si existe
+		// Parsear comision
+		comisionSugerida := c.PostForm("comision_sugerida")
+		var comisionFloat *float64
+		if comisionSugerida != "" {
+			if p, err := strconv.ParseFloat(comisionSugerida, 64); err == nil {
+				comisionFloat = &p
+			} else {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Precio inválido"})
+				return
+			}
+		}
+
+		// Manejo de imagen si existe
 		fileHeader, err := c.FormFile("imagen")
 		var publicURL string
 		if err == nil {
@@ -66,21 +81,24 @@ func CrearPedidoHandler(db *gorm.DB, hub *ws.Hub) gin.HandlerFunc {
 
 		// 4. Construir objeto Pedido (aún no guardamos)
 		nuevoPedido := models.Pedido{
-			UsuarioID:     usuarioID,
-			Descripcion:   descripcion,
-			Imagen:        publicURL,
-			FechaCreacion: time.Now(),
-			Precio:        precioFloat,
-			Fletero:       nil,
-			Monto:         nil,
-			Estado:        "Pendiente",
-			Nombre:        nombre,
-			Observaciones: observaciones,
-			Forma_Pago:    formaPago,
-			Direccion:     direccion,
-			Nro_Tlf:       numerotlf,
-			Pagado:        "No Pagado",
-			// Nombre_Vendedor se asignará después de obtener el nombre real
+			UsuarioID:         usuarioID,
+			Descripcion:       descripcion,
+			Imagen:            publicURL,
+			FechaCreacion:     time.Now(),
+			Precio:            precioFloat,
+			Fletero:           nil,
+			Monto:             nil,
+			Estado:            "Pendiente",
+			Nombre:            nombre,
+			Observaciones:     observaciones,
+			Forma_Pago:        formaPago,
+			Direccion:         direccion,
+			Nro_Tlf:           numerotlf,
+			Pagado:            "No Pagado",
+			Tela:              tela,
+			Color:             color,
+			Comision_Sugerida: comisionFloat,
+			Sub_Vendedor:      subVendedor,
 		}
 
 		// 5. Obtener el usuario para saber su nombre

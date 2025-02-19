@@ -35,6 +35,9 @@ func ActualizarPedidoHandler(db *gorm.DB, hub *ws.Hub) gin.HandlerFunc {
 		numerotlf := c.PostForm("nro_tlf")
 		pagado := c.PostForm("pagado")
 		atendidoStr := c.PostForm("atendido")
+		tela := c.PostForm("tela")
+		color := c.PostForm("color")
+		subVendedor := c.PostForm("sub_vendedor")
 
 		// Parsear monto y precio
 		var montoFloat *float64
@@ -51,6 +54,18 @@ func ActualizarPedidoHandler(db *gorm.DB, hub *ws.Hub) gin.HandlerFunc {
 		if precioStr != "" {
 			if p, err := strconv.ParseFloat(precioStr, 64); err == nil {
 				precioFloat = &p
+			} else {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Precio inválido"})
+				return
+			}
+		}
+
+		// Parsear comision
+		comisionSugerida := c.PostForm("comision_sugerida")
+		var comisionFloat *float64
+		if comisionSugerida != "" {
+			if p, err := strconv.ParseFloat(comisionSugerida, 64); err == nil {
+				comisionFloat = &p
 			} else {
 				c.JSON(http.StatusBadRequest, gin.H{"error": "Precio inválido"})
 				return
@@ -121,6 +136,18 @@ func ActualizarPedidoHandler(db *gorm.DB, hub *ws.Hub) gin.HandlerFunc {
 		}
 		if atendidoStr != "" {
 			pedido.Atendido = true
+		}
+		if tela != "" {
+			pedido.Tela = tela
+		}
+		if color != "" {
+			pedido.Color = color
+		}
+		if subVendedor != "" {
+			pedido.Sub_Vendedor = subVendedor
+		}
+		if comisionFloat != nil {
+			pedido.Comision_Sugerida = comisionFloat
 		}
 
 		// Guardar en la BD

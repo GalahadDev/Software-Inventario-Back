@@ -28,6 +28,7 @@ func main() {
 
 	hub := ws.NewHub()
 	
+	secretValue := os.Getenv("JWT_SECRET")
 	var secret = []byte(secretValue)
 
 	fmt.Print(config.DBURL())

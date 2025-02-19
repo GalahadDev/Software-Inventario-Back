@@ -65,6 +65,7 @@ func main() {
 	//Leer
 	router.GET("/users", handlers.AuthMiddleware(secret), handlers.RoleMiddleware("administrador"), handlers.ListarUsuariosHandler(db))                                                       // Lectura de todos los Usuarios
 	router.GET("/users/:id", handlers.AuthMiddleware(secret), handlers.RoleMiddleware("administrador", "gestor"), handlers.ObtenerUsuarioHandler(db))                                         // Lectura de un Usuario por ID
+	router.GET("/users/me", handlers.AuthMiddleware(secret), handlers.RoleMiddleware("vendedor"), handlers.ObtenerDatosVendedorHandler(db))                                                   // Lectura del propio perfil de un vendedor
 	router.GET("/pedidos", handlers.AuthMiddleware(secret), handlers.RoleMiddleware("administrador", "gestor"), handlers.ListarPedidosHandler(db))                                            // Lectura de todos los pedidos
 	router.GET("/pedidos/:id", handlers.AuthMiddleware(secret), handlers.RoleMiddleware("administrador", "gestor", "vendedor"), handlers.ObtenerPedidoHandler(db))                            // Lectura por el ID de un pedido
 	router.GET("/usuarios/:usuario_id/pedidos", handlers.AuthMiddleware(secret), handlers.RoleMiddleware("administrador", "gestor", "vendedor"), handlers.ListarPedidosPorUsuarioHandler(db)) // Lectura de todos los pedidos de un vendedor

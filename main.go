@@ -27,11 +27,7 @@ func main() {
 	}
 
 	hub := ws.NewHub()
-
-	//Configuración variables de entorno
-	secretValue := os.Getenv("JWT_SECRET")
-	log.Println("DEBUG JWT_SECRET:", secretValue)
-
+	
 	var secret = []byte(secretValue)
 
 	fmt.Print(config.DBURL())
@@ -58,11 +54,11 @@ func main() {
 
 
 	router := gin.Default()
-	router.Use(cors.New(corsConfig)) //
+	router.Use(cors.New(corsConfig))
 
 	//Crear
-	router.POST("/auth/login", handlers.LoginHandler(db))
-	router.POST("/users", handlers.AuthMiddleware(secret), handlers.RoleMiddleware("administrador", "gestor"), handlers.CrearUsuarioHandler(db))                   // Creacion de un Usuario                                                                                                   // Endpoint para el Login
+	router.POST("/auth/login", handlers.LoginHandler(db)) 													       // Endpoint para el Login
+	router.POST("/users", handlers.AuthMiddleware(secret), handlers.RoleMiddleware("administrador", "gestor"), handlers.CrearUsuarioHandler(db))                   // Creacion de un Usuario                                                                                                  
 	router.POST("/pedidos", handlers.AuthMiddleware(secret), handlers.RoleMiddleware("administrador", "gestor", "vendedor"), handlers.CrearPedidoHandler(db, hub)) // Creacion de pedido
 
 	//Leer
@@ -75,15 +71,16 @@ func main() {
 	router.GET("/reportes/vendedores/:vendedor_id/montos", handlers.AuthMiddleware(secret), handlers.RoleMiddleware("administrador", "gestor"), handlers.SumarMontosPorVendedor(db))          //Lectura de comision de un vendedor
 
 	//Actualizar
-	router.PUT("/users/:id", handlers.AuthMiddleware(secret), handlers.RoleMiddleware("administrador"), handlers.ActualizarUsuarioHandler(db))            // Modificar un Usuario por ID
+	router.PUT("/users/:id", handlers.AuthMiddleware(secret), handlers.RoleMiddleware("administrador"), handlers.ActualizarUsuarioHandler(db))                 // Modificar un Usuario por ID
 	router.PUT("/pedidos/:id", handlers.AuthMiddleware(secret), handlers.RoleMiddleware("administrador", "gestor"), handlers.ActualizarPedidoHandler(db, hub)) // Modificar un Pedido por ID
+	router.PUT("/users/bank-data", handlers.AuthMiddleware(secret), handlers.RoleMiddleware("vendedor"), handlers.ActualizarDatosBancariosHandler(db))         // Modificar datos bancarios desde un vendedor
 
 	//Eliminar
 	router.DELETE("/users/:id", handlers.AuthMiddleware(secret), handlers.RoleMiddleware("administrador"), handlers.EliminarUsuarioHandler(db))            // Eliminar un Usuario por ID
-	router.DELETE("/pedidos/:id", handlers.AuthMiddleware(secret), handlers.RoleMiddleware("administrador", "gestor"), handlers.EliminarPedidoHandler(db)) //Eliminar un Pedido por ID
+	router.DELETE("/pedidos/:id", handlers.AuthMiddleware(secret), handlers.RoleMiddleware("administrador", "gestor"), handlers.EliminarPedidoHandler(db)) // Eliminar un Pedido por ID
 
 	//WebSocket
-	router.GET("/ws", handlers.AuthMiddlewareQuery(secret), handlers.RoleMiddleware("administrador", "gestor"), handlers.WSHandler(hub))
+	router.GET("/ws", handlers.AuthMiddlewareQuery(secret), handlers.RoleMiddleware("administrador", "gestor"), handlers.WSHandler(hub)) // Conectar a WebSocket
 
 	router.Run(":8080")
 }

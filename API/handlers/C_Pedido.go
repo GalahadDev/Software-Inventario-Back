@@ -38,6 +38,7 @@ func CrearPedidoHandler(db *gorm.DB, hub *ws.Hub) gin.HandlerFunc {
 		tela := c.PostForm("tela")
 		color := c.PostForm("color")
 		subVendedor := c.PostForm("sub_vendedor")
+		fechaEntrega := c.PostForm("fecha_entrega")
 
 		// Parsear precio
 		precioStr := c.PostForm("precio")
@@ -79,7 +80,7 @@ func CrearPedidoHandler(db *gorm.DB, hub *ws.Hub) gin.HandlerFunc {
 			}
 		}
 
-		// 4. Construir objeto Pedido (aún no guardamos)
+		// 4. Construir objeto Pedido
 		nuevoPedido := models.Pedido{
 			UsuarioID:         usuarioID,
 			Descripcion:       descripcion,
@@ -99,6 +100,7 @@ func CrearPedidoHandler(db *gorm.DB, hub *ws.Hub) gin.HandlerFunc {
 			Color:             color,
 			Comision_Sugerida: comisionFloat,
 			Sub_Vendedor:      subVendedor,
+			Fecha_Entrega:     fechaEntrega,
 		}
 
 		// 5. Obtener el usuario para saber su nombre
@@ -125,7 +127,7 @@ func CrearPedidoHandler(db *gorm.DB, hub *ws.Hub) gin.HandlerFunc {
 		notif := NotificacionPedido{
 			Tipo:    "NUEVO_PEDIDO",
 			Pedido:  nuevoPedido,
-			Creador: creador, // lo mismo que Nombre_Vendedor, por si el front lo usa
+			Creador: creador,
 		}
 
 		notifBytes, _ := json.Marshal(notif)

@@ -38,6 +38,7 @@ func ActualizarPedidoHandler(db *gorm.DB, hub *ws.Hub) gin.HandlerFunc {
 		tela := c.PostForm("tela")
 		color := c.PostForm("color")
 		subVendedor := c.PostForm("sub_vendedor")
+		fechaEntrega := c.PostForm("fecha_entrega")
 
 		// Parsear monto y precio
 		var montoFloat *float64
@@ -148,6 +149,9 @@ func ActualizarPedidoHandler(db *gorm.DB, hub *ws.Hub) gin.HandlerFunc {
 		}
 		if comisionFloat != nil {
 			pedido.Comision_Sugerida = comisionFloat
+		}
+		if fechaEntrega != "" {
+			pedido.Fecha_Entrega = fechaEntrega
 		}
 
 		// Guardar en la BD

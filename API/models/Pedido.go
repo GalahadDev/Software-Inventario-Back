@@ -26,6 +26,7 @@ type Pedido struct {
 	Pagado            string    `gorm:"size:9;default:'No Pagado'"`
 	Atendido          bool      `gorm:"default:false"`
 	Imagen            string    `gorm:"size:255;not null"`
+	Fecha_Entrega     string    `gorm:"size:10;not null"`
 	FechaCreacion     time.Time `gorm:"autoCreateTime"`
 
 	Nombre_Vendedor string
